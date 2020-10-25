@@ -5,11 +5,11 @@
 #
 # Copyright (C) 2020 KFERMercer
 #
-name: OpenWrt-CI
+name: WNDR4300-CI
 
 on:
   schedule:
-    - cron: 0 20 * * *
+    - cron: 30 21 * * 5
   release:
     types: [published]
 
@@ -51,7 +51,110 @@ jobs:
           ./scripts/feeds install -a
 
       - name: Generate configuration file
-        run: make defconfig
+        run: |
+          rm -f ./.config*
+          touch ./.config
+          #
+          # ========================固件定制部分========================
+          #
+          # 编译WNDR4300固件:
+          cat >> .config <<EOF
+          CONFIG_TARGET_ar71xx=y
+          CONFIG_TARGET_ar71xx_nand=y
+          CONFIG_TARGET_ar71xx_nand_DEVICE_WNDR4300V1=y
+          EOF
+          # 取消默认开启选项:
+          cat >> .config <<EOF
+          # CONFIG_PACKAGE_coremark is not set
+          # CONFIG_PACKAGE_luci-app-adbyby-plus is not set
+          # CONFIG_PACKAGE_luci-app-ddns is not set
+          # CONFIG_PACKAGE_luci-app-nlbwmon is not set
+          # CONFIG_PACKAGE_luci-app-unblockmusic is not set
+          # CONFIG_PACKAGE_luci-app-vlmcsd is not set
+          # CONFIG_PACKAGE_luci-app-vsftpd is not set
+          # CONFIG_PACKAGE_luci-app-wol is not set
+          EOF
+          # ZRAM配置:
+          cat >> .config <<EOF
+          CONFIG_PACKAGE_kmod-zram=y
+          CONFIG_ZLIB_OPTIMIZE_SPEED=y
+          EOF
+          # 硬盘挂载及分享配置:
+          cat >> .config <<EOF
+          CONFIG_PACKAGE_automount=y
+          CONFIG_PACKAGE_autosamba=y
+          EOF
+          # USB3.0支持:
+          cat >> .config <<EOF
+          CONFIG_PACKAGE_kmod-usb3=y
+          EOF
+          # LuCI插件配置:
+          cat >> .config <<EOF
+          CONFIG_PACKAGE_luci-app-aria2=y
+          CONFIG_PACKAGE_luci-app-chinadns=y
+          CONFIG_PACKAGE_luci-app-dns-forwarder=y
+          CONFIG_PACKAGE_luci-app-hd-idle=y
+          CONFIG_PACKAGE_luci-app-transmission=y
+          EOF
+          # LuCI主题:
+          cat >> .config <<EOF
+          CONFIG_PACKAGE_luci-theme-material=y
+          EOF
+          # Aira2配置:
+          cat >> .config <<EOF
+          CONFIG_ARIA2_ASYNC_DNS=y
+          CONFIG_ARIA2_BITTORRENT=y
+          CONFIG_ARIA2_COOKIE=y
+          CONFIG_ARIA2_NOXML=y
+          CONFIG_ARIA2_OPENSSL=y
+          CONFIG_ARIA2_SFTP=y
+          CONFIG_ARIA2_WEBSOCKET=y
+          EOF
+          # DNSMASQ_FULL配置:
+          cat >> .config <<EOF
+          CONFIG_PACKAGE_dnsmasq_full_auth=y
+          CONFIG_PACKAGE_dnsmasq_full_broken_rtc=y
+          CONFIG_PACKAGE_dnsmasq_full_conntrack=y
+          CONFIG_PACKAGE_dnsmasq_full_dhcpv6=y
+          CONFIG_PACKAGE_dnsmasq_full_dnssec=y
+          CONFIG_PACKAGE_dnsmasq_full_noid=y
+          EOF
+          # DROPBEAR配置:
+          cat >> .config <<EOF
+          CONFIG_DROPBEAR_ECC=y
+          CONFIG_DROPBEAR_ECC_FULL=y
+          CONFIG_DROPBEAR_ZLIB=y
+          EOF
+          # SSR-PLUS配置:
+          cat >> .config <<EOF
+          CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Trojan=y
+          CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_V2ray=y
+          CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_V2ray_plugin=y
+          EOF
+          # 常用软件包:
+          cat >> .config <<EOF
+          CONFIG_PACKAGE_bash=y
+          CONFIG_PACKAGE_bind-dig=y
+          CONFIG_PACKAGE_blockd=y
+          CONFIG_PACKAGE_curl=y
+          CONFIG_PACKAGE_haveged=y
+          CONFIG_PACKAGE_htop=y
+          CONFIG_PACKAGE_mtr=y
+          CONFIG_PACKAGE_transmission-remote-openssl=y
+          CONFIG_PACKAGE_vim-fuller=y
+          CONFIG_PACKAGE_whereis=y
+          EOF
+          # 取消DDNS及其附属脚本:
+          cat >> .config <<EOF
+          # CONFIG_PACKAGE_ddns-scripts is not set
+          # CONFIG_PACKAGE_ddns-scripts_aliyun is not set
+          # CONFIG_PACKAGE_ddns-scripts_dnspod is not set
+          EOF
+          #
+          # ========================固件定制部分结束========================
+          #
+          sed -i 's/^[ \t]*//g' ./.config
+          make defconfig
 
       - name: Make download
         run: |
