@@ -186,19 +186,19 @@ jobs:
       - name: Deliver buildinfo
         uses: actions/upload-artifact@v2
         with:
-          name: OpenWrt_buildinfo
+          name: WNDR4300_buildinfo
           path: ./artifact/buildinfo/
 
       - name: Deliver package
         uses: actions/upload-artifact@v2
         with:
-          name: OpenWrt_package
+          name: WNDR4300_package
           path: ./artifact/package/
 
       - name: Deliver firmware
         uses: actions/upload-artifact@v2
         with:
-          name: OpenWrt_firmware
+          name: WNDR4300_firmware
           path: ./bin/targets/
   
 
